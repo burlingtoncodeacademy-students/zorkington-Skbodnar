@@ -1,3 +1,11 @@
+
+/* Notes on project status:
+- I need to rework my if/else if/else statements, because the logic is getting jumbled;
+- I think I need to create more distinction between how I use my rooms and how I use my items;
+- Presently, my currentRoom variable is not getting updated when the player enters a new room and I'm not sure as to why;
+- I have to rework the logic flow of the riddle 
+*/
+
 const readline = require("readline");
 const rli = readline.createInterface(process.stdin, process.stdout);
 
@@ -77,7 +85,7 @@ class Item {
   //Logic: ELSE IF user inputs an action that includes "use" && the item is in the room's invetory.console.log response
   //logic: ELSE: console.log `I'm sorry, but you can't take that. Try another action>_`;
   itemAction() {
-    if (this.action === "examine" && roomInventory.includes([target])) {
+    if (action === "examine" && roomInventory.includes([target])) {
       console.log(this.actionOutcome);
     } else if (action === "use" && roomInventory.includes([target])) {
       console.log(this.actionOutcome);
@@ -116,16 +124,16 @@ let bird = new Room(
 );
 let path = new Room(
   "path",
-  "This is a feathered path. The feathered path leads you to a moss-covered dome. You’ve heard of this place, a vast anti-kingdom, nestled within the crook of every Bird’s wing…",
+  "This is a feathered path. The feathered path leads you to a moss dome. You’ve heard of this place, a vast anti-kingdom, nestled within the crook of every Bird’s wing…",
   ["move", "use", "open", "describe"],
-  "This feathered path leads you to a moss-covered dome. You’ve heard of this place, a vast anti-kingdom, nestled within the crook of every Bird’s wing…",
+  "Sorry, this door doesn’t open like other doors--just by a turn of a handle or a press of a button--The moss will help you if you ask",
   "door",
   ["bird", "moss dome"]
 );
 
 let mossDome = new Room(
   "moss dome",
-  "A moss-covered dome. You’ve heard of this place, a vast anti-kingdom, nestled within the crook of every Bird’s wing. You want so badly to go inside. You notice a door...",
+  "A moss dome. You’ve heard of this place, a vast anti-kingdom, nestled within the crook of every Bird’s wing. You want so badly to go inside. You notice a door...",
   ["move", "open", "use", "describe"],
   "Sorry, this door doesn’t open like other doors--just by a turn of a handle or a press of a button--The moss will help you if you ask",
   ["door", "moss", "teacup", "fountain", "mirror"],
@@ -162,12 +170,6 @@ let kitchen = new Room(
   ["plate", "nametag", "north door", "south door", "east door", "west door"],
   ["great hall", "north room", "south room", "east room", "west room"]
 
-  // name of room,
-  // description of room,
-  // action (verbs that can be used in the room),
-  // actionOutcome (response prompt after action is complete),
-  // roomInventory (items in room)
-  // altRooms (rooms that player can move to from current room)
 );
 
 /*------------------------------------Create FOUR other ROOMS ---------------------------------------------------*/
@@ -192,6 +194,22 @@ let westRoom = new Room();
 let playerObject = {
   currentRoom: "forest",
   playerInventory: [],
+  playerInstructions: `\nPlayer Instructions:\nAs you move along the path, you will have opportunities to engage with different items in different locations.\n
+  To declare your next move, type an action (verb) followed by the item (noun).\n
+  Index of game verbs:
+  "move" - allows you to move from one location to the next
+  "describe" - allows you to receive a description of the room you are in
+  "use" - allows you to utilize an item
+  "examine" - allows you to examine an item
+  "take" - allows you to take an item. Once an item is taken it is stored in your inventory\n
+  For example (and don’t worry, this is not a spoiler), If you were to come across a branch on the path,\n you have the following options: “take branch”, “use branch” or "examine branch".\n
+  
+  A few other notes to keep in mind while you’re on the path:
+  "leave" enables you to leave the program;
+  "i" allows you to check your inventory at any point during the game;
+  "help" will return you to this instructional message.
+  
+  Ok, that seems to be all you need to know...for now…\n`
 };
 
 let door = new Item(
@@ -343,7 +361,7 @@ let itemLookUp = {
 };
 
 async function start() {
-  let userAction = await ask(`What would you like to do?>_`);
+  let userAction = await ask(`\nWhat would you like to do?>_`);
 
   let inputArray = userAction.toLowerCase().split(" "); //splitting into each word into an array
 
@@ -383,11 +401,19 @@ async function start() {
       `You typed "leave" and so the game will come to an end. See ya next time!`
     );
     process.exit();
+    // Create if statement for riddle. BUT this statement is still missing current room criteria: if currentRoom === "path".
+    // Logic for Riddle should be more like: If player is on path and they try to "use" the "door"
+  } else if (action === "help") {
+    console.log(playerObject.playerInstructions);
+  }else if (action === "use" && target === "door") {
+    console.log(door.actionOutcome);
+  } else if (action === "use" && target === "moss") {
+    console.log(moss.actionOutcome);
   } else if (action === "i" && playerObject.playerInventory > 0) {
     console.log(
       `You have` +
         playerObject.playerInventory.join() +
-        `in your player inventory.` 
+        `in your player inventory.`
     );
   } else console.log`You don't have any items in your inventory yet.`; // currently prints an array. Still need to turn it into st
 
@@ -397,11 +423,12 @@ async function start() {
 //ZORKINGTON
 // Welcome Message with instructions for user
 console.log(`\nWelcome to Patterned Path. You’re just in time.\n
-You’ve just awoken in a dense and tangled wood. You don’t remember how you got here. Your feet are sore and blistered leading ya to figure you must've arrived by foot. A large bird swoops down towards you through the tangled life of the forest and lands beside you.\n`);
+You’ve just awoken in a dense and tangled wood. You don’t remember how you got here. Your feet are sore and blistered leading ya to figure you must've arrived by foot. A large bird swoops down towards you through the tangled life of the forest and lands beside you.\n
+Note: Type "help" for more thorough instructions.`);
 
 start();
 
-/*--------------------------------SANITATION FUNCTION -------------------------------------------*/
+/*--------------------------------SANITIZING FUNCTION -------------------------------------------*/
 // // Create a function to scrub user input data
 // function scrubUserInput(word) {
 //   let scrubbedInput = word.toLowerCase().trim().split(" ");
@@ -411,25 +438,3 @@ start();
 // // // If player inputs an ALLOWABLE ACTION on an ALLOWABLE ITEM, the game will provide next prompt
 // console.log(scrubUserInput(userAction));
 // let scrubResult = scrubUserInput(userAction); //This is the variable name for the function. This is what I need to pass
-
-
-/*--------------------------------INSTRUCTIONS FOR USER: (Want to create way for user to access instructions by typing "help")
-As you move along the path, you will have opportunities to engage with different items in different locations.\n
-To declare your next move, type an action (verb) followed by the item (noun).\n
-
-Index of game verbs:
-"move" - allows you to move from one location to the next
-"describe" - allows you to receive a description of the room you are in
-"use" - allows you to utilize an item
-"examine" - allows you to examine an item
-"take" - allows you to take an item. Once an item is taken it is stored in your inventory 
-
-For example (and don’t worry, this is not a spoiler), If you were to come across a branch on the path,\n
-you have the following options: “take branch”, “use branch” or "examine branch".\n
-
-A few other notes to keep in mind while you’re on the path.\n
-1)"leave" enables you to leave the program.\n
-2)"i" allows you to check your inventory at any point\n 
-3) "help" will return you to this instructional guide
-
-Ok, that seems to be all you need to know...for now…\n`);-------------------------------------------*/
